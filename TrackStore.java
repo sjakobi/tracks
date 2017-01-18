@@ -3,14 +3,14 @@ import java.util.*;
 
 public class TrackStore {
   public final HashSet<Track> tracks;
-  public final LocalDateTime lastChange;
+  public LocalDateTime lastChange;
   public TrackStore() {
-    tracks = new HashSet();
+    tracks = new HashSet<Track>();
     lastChange = LocalDateTime.now();
   }
   public Hash getHash() { return new Hash(tracks.hashCode()); }
-  public boolean insert(Track t) {
-    boolean b = tracks.insert(t);
+  public boolean add(Track t) {
+    boolean b = tracks.add(t);
     if (b) {
       lastChange = LocalDateTime.now();
     }
