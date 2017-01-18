@@ -14,4 +14,7 @@ public class Hash {
       return Optional.empty();
     }
   }
+  public boolean equals(Object other) {
+    return (other instanceof Hash) && ((Hash)other).hash == this.hash;
+  }
 }

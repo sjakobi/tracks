@@ -18,4 +18,13 @@ public class IHave extends Message {
         ? Hash.fromBytes(Arrays.copyOfRange(bytes, 4, 8)).map(IHave::new)
         : Optional.empty();
   }
+
+  public boolean equals(Object other) {
+    return (other instanceof IHave) && ((IHave)other).hash.equals(this.hash);
+  }
+
+  public static void main(String[] args) {
+    IHave x = new IHave(new Hash(17));
+    System.out.println(IHave.fromBytes(x.toBytes()).equals(Optional.of(x)));
+  }
 }
