@@ -13,6 +13,7 @@ public class TracksClient {
 
   public final int port;
   public final TrackStore store;
+  public final DatagramSocket socket;
 
   public static void main(String[] args) throws IOException {
     String dateiname = null;
@@ -44,6 +45,7 @@ public class TracksClient {
   public TracksClient(int port, TrackStore store) throws IOException {
     this.store = store;
     this.port = port;
+    socket = new DatagramSocket(port);
   }
 
   public void setRandomTimeout(DatagramSocket socket) throws SocketException {
@@ -51,42 +53,52 @@ public class TracksClient {
         ThreadLocalRandom.current().nextInt(minTimeout, maxTimeout + 1);
     socket.setSoTimeout(randomTimeout);
   }
+  public void sendIHaves() throws IOException {
+    IHave ihave = new IHave(store.getHash());
+    byte[] ihaveBytes = ihave.toBytes();
+    for (int remotePort : remotePorts) {
+      if (remotePort != port) {
+        DatagramPacket outPacket = new DatagramPacket(
+            ihaveBytes, ihaveBytes.length, new InetSocketAddress(remotePort));
+        socket.send(outPacket);
+      }
+    }
+  }
+
+  public void handleMessage(byte[] bytes, int remotePort) {
+    System.out.println("Msg received from Port " + remotePort + ": " +
+                       Arrays.toString(Arrays.copyOf(bytes, 5)) + "...");
+    Optional<Message> msg = IHave.fromBytes(bytes).map(x -> (Message)x);
+    if (msg.isPresent()) {
+      Message msg_ = msg.get();
+      if ((msg_ instanceof IHave) &&
+          !((IHave)msg_).hash.equals(store.getHash())) { // send WHVY
+      } else {
+      }
+    }
+
+    System.out.println("Decoded: " + msg);
+  }
 
   public void run() throws IOException, SocketException {
     System.out.println("Ich habe folgende Stücke:");
     for (Track track : store.tracks) {
       System.out.println("    " + track);
     }
-    DatagramSocket socket = new DatagramSocket(port);
-    setRandomTimeout(socket);
     while (true) {
-      /*
-for (int remotePort : remotePorts) {
-  if (remotePort != port) {
-    // Send IHAVE
-    String ihave = ihave();
-    byte[] ihaveBytes = ihave.getBytes();
-    DatagramPacket outPacket = new DatagramPacket(
-        ihaveBytes, ihaveBytes.length, new InetSocketAddress(remotePort));
-    socket.send(outPacket);
+      setRandomTimeout(socket);
 
-    // Accept Answers
-    byte[] buffer = new byte[2048];
-    DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
-    try {
-      socket.receive(inPacket);
-    } catch (SocketTimeoutException ste) {
-      continue;
-    }
-    String inMsg = inPacket.getData();
-    if (inMsg.startsWith("IHAVE")) {
-      if (inMsg.equals(ihave)) {
-        continue;
+      // Accept Answers
+      byte[] buffer = new byte[2048];
+      DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
+      try {
+        socket.receive(inPacket);
+        byte[] inMsg = inPacket.getData();
+        handleMessage(inMsg, inPacket.getPort());
+      } catch (SocketTimeoutException ste) {
+        System.out.println("No message");
+        sendIHaves();
       }
-    }
-  }
-}
-  */
     }
   }
 }
