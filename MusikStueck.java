@@ -9,9 +9,7 @@ public class MusikStueck {
     this.titel = titel;
   }
 
-  public String toString() {
-    return interpret + "|" + titel;
-  }
+  public String toString() { return interpret + "|" + titel; }
 
   public static MusikStueck fromString(String input) {
     Scanner scanner = new Scanner(input);

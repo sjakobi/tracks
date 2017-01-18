@@ -5,8 +5,8 @@ import java.nio.file.*;
 import java.util.*;
 
 public class P2PClient {
-  public static final int[] remotePorts = new int[]{
-    50001, 50002, 50003, 50004, 50005, 50006, 50007, 50008, 50009, 50010};
+  public static final int[] remotePorts = new int[] {
+      50001, 50002, 50003, 50004, 50005, 50006, 50007, 50008, 50009, 50010};
   public static final int timeout = 3; // ms
 
   public final String dateiname;
@@ -35,8 +35,9 @@ public class P2PClient {
 
   public P2PClient(String dateiname, int port) throws IOException {
     Set<MusikStueck> stuecke = new HashSet<>();
-    List<String> zeilen = 
-        Files.readAllLines( FileSystems.getDefault().getPath(".", dateiname), Charset.defaultCharset() ) ;
+    List<String> zeilen =
+        Files.readAllLines(FileSystems.getDefault().getPath(".", dateiname),
+                           Charset.defaultCharset());
     for (String s : zeilen) {
       stuecke.add(MusikStueck.fromString(s));
     }
@@ -58,7 +59,8 @@ public class P2PClient {
           // Send IHAVE
           String ihave = ihave();
           byte[] ihaveBytes = ihave.getBytes();
-          DatagramPacket outPacket = new DatagramPacket(ihaveBytes, ihaveBytes.length, new InetSocketAddress(remotePort));
+          DatagramPacket outPacket = new DatagramPacket(
+              ihaveBytes, ihaveBytes.length, new InetSocketAddress(remotePort));
           socket.send(outPacket);
 
           // Accept Answers
@@ -74,13 +76,11 @@ public class P2PClient {
             if (inMsg.equals(ihave)) {
               continue;
             } else {
-
-
+            }
+          }
         }
       }
+      public String ihave() {
+        return "IHAVE" + stuecke.size() + "|" + stuecke.hashCode();
+      }
     }
-  }
-  public String ihave() {
-    return "IHAVE" + stuecke.size() + "|" + stuecke.hashCode();
-  }
-}
