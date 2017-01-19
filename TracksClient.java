@@ -145,6 +145,8 @@ public class TracksClient {
   public void quitIfNoRecentUpdate() {
     Instant now = Instant.now();
     if (Duration.between(store.lastChange, now).toMillis() > 10000L) {
+      System.out.println();
+      System.out.println();
       System.out.println("No update in the last 10s. I have:");
       store.printContents();
       System.exit(0);
