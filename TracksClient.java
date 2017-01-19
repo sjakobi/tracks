@@ -3,6 +3,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.*;
 import java.nio.file.*;
+import java.time.*;
 import java.util.*;
 import java.util.function.*;
 
@@ -71,9 +72,9 @@ public class TracksClient {
   }
 
   public Optional<Message> decodeBytes(byte[] bytes) {
-    List<Function<byte[], Optional<Message>>> decoders =
-        Arrays.asList(IHave::fromBytes, WhatHaveYou::fromBytes,
-                      Summary::fromBytes, RequestTrack::fromBytes);
+    List<Function<byte[], Optional<Message>>> decoders = Arrays.asList(
+        IHave::fromBytes, WhatHaveYou::fromBytes, Summary::fromBytes,
+        RequestTrack::fromBytes, SendTrack::fromBytes);
     return decoders.stream()
         .map(x -> x.apply(bytes))
         .filter(Optional::isPresent)
@@ -87,9 +88,10 @@ public class TracksClient {
 
     Message msg = decodeBytes(bytes).orElse(null);
     if (msg != null) {
-      if ((msg instanceof IHave) &&
-          !((IHave)msg).hash.equals(store.getHash())) {
-        sendMessage(new WhatHaveYou(), remotePort);
+      if (msg instanceof IHave) {
+        if (!((IHave)msg).hash.equals(store.getHash())) {
+          sendMessage(new WhatHaveYou(), remotePort);
+        }
       } else if (msg instanceof WhatHaveYou) {
         sendMessage(new Summary(store.getTrackHashes()), remotePort);
       } else if (msg instanceof Summary) {
@@ -102,11 +104,33 @@ public class TracksClient {
           }
         }
       } else if (msg instanceof RequestTrack) {
-        // send track
+        RequestTrack r = (RequestTrack)msg;
+        Hash requestedHash = r.hash;
+        for (Track t : store.tracks) {
+          if (t.getHash().equals(requestedHash)) {
+            sendMessage(new SendTrack(t), remotePort);
+            break;
+          }
+        }
+      } else if (msg instanceof SendTrack) {
+        SendTrack s = (SendTrack)msg;
+        store.add(s.track);
+      } else {
+        System.out.println("Not sure what this message is: " + msg);
+        sendIHaves();
       }
     }
 
     System.out.println("Decoded: " + msg);
+  }
+
+  public void quitIfNoRecentUpdate() {
+    Instant now = Instant.now();
+    if (Duration.between(store.lastChange, now).toMillis() > 10000L) {
+      System.out.println("No update in the last 10s. I have:");
+      store.printContents();
+      System.exit(0);
+    }
   }
 
   public void run() throws IOException, SocketException {
@@ -115,6 +139,7 @@ public class TracksClient {
       System.out.println("    " + track);
     }
     while (true) {
+      quitIfNoRecentUpdate();
       setRandomTimeout(socket);
 
       // Accept Answers
