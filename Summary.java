@@ -2,6 +2,9 @@ import java.util.*;
 import java.nio.*;
 import java.nio.charset.*;
 
+/**
+ * Message that contains all the track Hash IDs of a single client.
+ */
 public class Summary extends Message {
   public static byte[] marker = "SMRY".getBytes(StandardCharsets.US_ASCII);
   public final Set<Hash> trackHashes;

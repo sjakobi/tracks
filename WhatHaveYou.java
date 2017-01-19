@@ -2,6 +2,9 @@ import java.nio.*;
 import java.util.*;
 import java.nio.charset.*;
 
+/**
+ * Message to request a Summary message.
+ */
 public class WhatHaveYou extends Message {
   public static byte[] marker = "WHVY".getBytes(StandardCharsets.US_ASCII);
   public byte[] toBytes() { return marker; }
@@ -12,12 +15,4 @@ public class WhatHaveYou extends Message {
   }
 
   public boolean equals(Object other) { return (other instanceof WhatHaveYou); }
-
-  /*
-  public static void main(String[] args) {
-    Optional<WhatHaveYou> decoded =
-        WhatHaveYou.fromBytes((new WhatHaveYou()).toBytes());
-    System.out.println(decoded.equals(Optional.of(new WhatHaveYou())));
-  }
-  */
 }

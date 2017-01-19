@@ -2,6 +2,10 @@ import java.nio.*;
 import java.util.*;
 import java.nio.charset.*;
 
+/**
+ * Message containing the Hash ID of a track that should be sent by the
+ * receiver.
+ */
 public class RequestTrack extends Message {
   public Hash hash;
   public RequestTrack(Hash hash) { this.hash = hash; }
@@ -13,6 +17,7 @@ public class RequestTrack extends Message {
     bb.put(hb);
     return bb.array();
   }
+
   public static Optional<Message> fromBytes(byte[] bytes) {
     return (Arrays.equals(Arrays.copyOf(bytes, 4), marker) && bytes.length > 4)
         ? Hash.fromBytes(Arrays.copyOfRange(bytes, 4, 8)).map(RequestTrack::new)

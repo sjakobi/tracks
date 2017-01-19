@@ -1,6 +1,9 @@
 import java.util.*;
 import java.nio.charset.*;
 
+/**
+ * A music track with artist and title
+ */
 public class Track {
   public final String artist;
   public final String title;
@@ -12,6 +15,9 @@ public class Track {
 
   public String toString() { return artist + "|" + title; }
 
+  /**
+   * Parse a track from a string in the format "artist|title".
+   */
   public static Track fromString(String input) {
     String[] parts = input.split("\\|");
     String artist = parts[0];
@@ -27,6 +33,9 @@ public class Track {
     return result;
   }
 
+  /**
+   * Hash ID.
+   */
   public Hash getHash() { return new Hash(hashCode()); }
 
   @Override
@@ -42,10 +51,16 @@ public class Track {
         this.title.equals(otherTrack.title);
   }
 
+  /**
+   * Serialise to a UTF-8 encoded series of bytes.
+   */
   public byte[] toBytes() {
     return toString().getBytes(StandardCharsets.UTF_8);
   }
 
+  /**
+   * Parse a track from a UTF-8 encoded series of bytes
+   */
   public static Optional<Track> fromBytes(byte[] bytes) {
     return Optional.of(fromString(new String(bytes, StandardCharsets.UTF_8)));
   }

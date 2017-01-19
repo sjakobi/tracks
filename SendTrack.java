@@ -2,6 +2,9 @@ import java.nio.*;
 import java.util.*;
 import java.nio.charset.*;
 
+/**
+ * Message that contains a Track.
+ */
 public class SendTrack extends Message {
   public Track track;
   public SendTrack(Track track) { this.track = track; }

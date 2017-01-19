@@ -1,6 +1,9 @@
 import java.nio.*;
 import java.util.*;
 
+/**
+ * A Hash ID. For the purpose of this exercise this is simple int.
+ */
 public class Hash {
   public int hash;
   public Hash(int n) { hash = n; }
