@@ -71,8 +71,9 @@ public class TracksClient {
   }
 
   public Optional<Message> decodeBytes(byte[] bytes) {
-    List<Function<byte[], Optional<Message>>> decoders = Arrays.asList(
-        IHave::fromBytes, WhatHaveYou::fromBytes, Summary::fromBytes);
+    List<Function<byte[], Optional<Message>>> decoders =
+        Arrays.asList(IHave::fromBytes, WhatHaveYou::fromBytes,
+                      Summary::fromBytes, RequestTrack::fromBytes);
     return decoders.stream()
         .map(x -> x.apply(bytes))
         .filter(Optional::isPresent)
@@ -92,7 +93,16 @@ public class TracksClient {
       } else if (msg instanceof WhatHaveYou) {
         sendMessage(new Summary(store.getTrackHashes()), remotePort);
       } else if (msg instanceof Summary) {
-        // request what I don't have yet
+        Summary s = (Summary)msg;
+        Set<Hash> trackHashes = store.getTrackHashes();
+        for (Hash h : s.trackHashes) {
+          if (!trackHashes.contains(h)) {
+            sendMessage(new RequestTrack(h), remotePort);
+            break;
+          }
+        }
+      } else if (msg instanceof RequestTrack) {
+        // send track
       }
     }
 
