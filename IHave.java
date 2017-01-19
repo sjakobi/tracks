@@ -13,7 +13,7 @@ public class IHave extends Message {
     bb.put(hb);
     return bb.array();
   }
-  public static Optional<IHave> fromBytes(byte[] bytes) {
+  public static Optional<Message> fromBytes(byte[] bytes) {
     return (Arrays.equals(Arrays.copyOf(bytes, 4), marker) && bytes.length > 4)
         ? Hash.fromBytes(Arrays.copyOfRange(bytes, 4, 8)).map(IHave::new)
         : Optional.empty();

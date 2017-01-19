@@ -4,6 +4,7 @@ import java.net.*;
 import java.nio.charset.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.function.*;
 
 public class TracksClient {
   public static final int[] remotePorts = new int[] {
@@ -55,25 +56,40 @@ public class TracksClient {
   }
   public void sendIHaves() throws IOException {
     IHave ihave = new IHave(store.getHash());
-    byte[] ihaveBytes = ihave.toBytes();
     for (int remotePort : remotePorts) {
       if (remotePort != port) {
-        DatagramPacket outPacket = new DatagramPacket(
-            ihaveBytes, ihaveBytes.length, new InetSocketAddress(remotePort));
-        socket.send(outPacket);
+        sendMessage(ihave, remotePort);
       }
     }
   }
 
-  public void handleMessage(byte[] bytes, int remotePort) {
+  public void sendMessage(Message msg, int remotePort) throws IOException {
+    byte[] bytes = msg.toBytes();
+    DatagramPacket outPacket = new DatagramPacket(
+        bytes, bytes.length, new InetSocketAddress(remotePort));
+    socket.send(outPacket);
+  }
+
+  public Optional<Message> decodeBytes(byte[] bytes) {
+    List<Function<byte[], Optional<Message>>> decoders =
+        Arrays.asList(IHave::fromBytes, WhatHaveYou::fromBytes);
+    return decoders.stream()
+        .map(x -> x.apply(bytes))
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .findFirst();
+  }
+
+  public void handleMessage(byte[] bytes, int remotePort) throws IOException {
     System.out.println("Msg received from Port " + remotePort + ": " +
                        Arrays.toString(Arrays.copyOf(bytes, 5)) + "...");
-    Optional<Message> msg = IHave.fromBytes(bytes).map(x -> (Message)x);
-    if (msg.isPresent()) {
-      Message msg_ = msg.get();
-      if ((msg_ instanceof IHave) &&
-          !((IHave)msg_).hash.equals(store.getHash())) { // send WHVY
-      } else {
+
+    Message msg = decodeBytes(bytes).orElse(null);
+    if (msg != null) {
+      if ((msg instanceof IHave) &&
+          !((IHave)msg).hash.equals(store.getHash())) {
+        sendMessage(new WhatHaveYou(), remotePort);
+      } else if (msg instanceof WhatHaveYou) { // send SMRY
       }
     }
 
