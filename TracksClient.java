@@ -10,8 +10,8 @@ import java.util.function.*;
 public class TracksClient {
   public static final int[] remotePorts = new int[] {
       50001, 50002, 50003, 50004, 50005, 50006, 50007, 50008, 50009, 50010};
-  public static final int minTimeout = 200;  // ms
-  public static final int maxTimeout = 1500; // ms
+  public static final int minTimeout = 200; // ms
+  public static final int maxTimeout = 800; // ms
 
   public final int port;
   public final TrackStore store;
@@ -65,6 +65,7 @@ public class TracksClient {
   }
 
   public void sendMessage(Message msg, int remotePort) throws IOException {
+    System.out.println("Sending message to port " + remotePort + ": " + msg);
     byte[] bytes = msg.toBytes();
     DatagramPacket outPacket = new DatagramPacket(
         bytes, bytes.length, new InetSocketAddress(remotePort));
@@ -83,11 +84,11 @@ public class TracksClient {
   }
 
   public void handleMessage(byte[] bytes, int remotePort) throws IOException {
-    System.out.println("Msg received from Port " + remotePort + ": " +
-                       Arrays.toString(Arrays.copyOf(bytes, 5)) + "...");
-
+    System.out.print("Message received from Port " + remotePort + ": ");
     Message msg = decodeBytes(bytes).orElse(null);
+
     if (msg != null) {
+      System.out.println(msg);
       if (msg instanceof IHave) {
         if (!((IHave)msg).hash.equals(store.getHash())) {
           sendMessage(new WhatHaveYou(), remotePort);
@@ -117,11 +118,8 @@ public class TracksClient {
         store.add(s.track);
       } else {
         System.out.println("Not sure what this message is: " + msg);
-        sendIHaves();
       }
     }
-
-    System.out.println("Decoded: " + msg);
   }
 
   public void quitIfNoRecentUpdate() {
@@ -134,15 +132,13 @@ public class TracksClient {
   }
 
   public void run() throws IOException, SocketException {
-    System.out.println("Ich habe folgende Stücke:");
-    for (Track track : store.tracks) {
-      System.out.println("    " + track);
-    }
+    System.out.println("I have the following tracks:");
+    store.printContents();
+
     while (true) {
       quitIfNoRecentUpdate();
       setRandomTimeout(socket);
 
-      // Accept Answers
       byte[] buffer = new byte[2048];
       DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
       try {
@@ -150,7 +146,7 @@ public class TracksClient {
         byte[] inMsg = inPacket.getData();
         handleMessage(inMsg, inPacket.getPort());
       } catch (SocketTimeoutException ste) {
-        System.out.println("No message");
+        System.out.println("Received no message");
         sendIHaves();
       }
     }
