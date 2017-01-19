@@ -21,8 +21,8 @@ public class TrackStore {
       System.out.println(t);
     }
   }
-  public List<Hash> getTrackHashes() {
-    List<Hash> l = new ArrayList<>(tracks.size());
+  public Set<Hash> getTrackHashes() {
+    Set<Hash> l = new HashSet<>(tracks.size());
     for (Track t : tracks) {
       l.add(t.getHash());
     }

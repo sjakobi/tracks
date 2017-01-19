@@ -18,5 +18,7 @@ public class Hash {
     return (other instanceof Hash) && ((Hash)other).hash == this.hash;
   }
 
+  public int hashCode() { return hash; }
+
   public String toString() { return "Hash{" + hash + "}"; }
 }

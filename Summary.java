@@ -4,8 +4,8 @@ import java.nio.charset.*;
 
 public class Summary extends Message {
   public static byte[] marker = "SMRY".getBytes(StandardCharsets.US_ASCII);
-  public final List<Hash> trackHashes;
-  public Summary(List<Hash> trackHashes) { this.trackHashes = trackHashes; }
+  public final Set<Hash> trackHashes;
+  public Summary(Set<Hash> trackHashes) { this.trackHashes = trackHashes; }
   public byte[] toBytes() {
     ByteBuffer bb =
         ByteBuffer.allocate(marker.length + 4 + trackHashes.size() * 4);
@@ -21,7 +21,7 @@ public class Summary extends Message {
       ByteBuffer bb = ByteBuffer.wrap(bytes);
       bb.getInt(); // marker
       int len = bb.getInt();
-      ArrayList<Hash> hashes = new ArrayList<>(len);
+      HashSet<Hash> hashes = new HashSet<>(len);
       for (int i = 0; i < len; i++) {
         hashes.add(new Hash(bb.getInt()));
       }
@@ -37,10 +37,14 @@ public class Summary extends Message {
   }
 
   public static void main(String[] args) {
-    Summary x = new Summary(Arrays.asList(new Hash(1), new Hash(2)));
+    Summary x =
+        new Summary(new HashSet<>(Arrays.asList(new Hash(1), new Hash(2))));
     Summary decoded = (Summary)Summary.fromBytes(x.toBytes()).get();
     System.out.println(decoded);
     System.out.println(decoded.trackHashes);
+    System.out.println(x);
+    System.out.println(x.trackHashes);
+
     System.out.println(x.equals(decoded));
   }
 }
